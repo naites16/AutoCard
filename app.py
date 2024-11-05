@@ -122,10 +122,10 @@ if uploaded_file is not None:
 
         with col_mapa:
             st_folium(m, width='100%', returned_objects=[])
-
-            # Tabela de Esquema de Cores
-            esquema_cores = pd.DataFrame(list(zip(dias_da_semana.values(), [f"<td style='background-color:{cor}'>{dia}</td>" for cor, dia in zip(cores, dias_da_semana.values())])), columns=["Dia", "Cor"])
-            st.write("### Esquema de Cores do mapa")
-            st.write(esquema_cores.to_html(index=False, escape=False, header=False), unsafe_allow_html=True)
     except Exception as e:
         st.error(f"Ocorreu um erro: {e}")
+
+     # Tabela de Esquema de Cores
+    esquema_cores = pd.DataFrame(list(zip(dias_da_semana.values(), [f"<td style='background-color:{cor}'>{dia}</td>" for cor, dia in zip(cores, dias_da_semana.values())])), columns=["Dia", "Cor"])
+    st.write("### Esquema de Cores do mapa")
+    st.write(esquema_cores.to_html(index=False, escape=False, header=False), unsafe_allow_html=True)
