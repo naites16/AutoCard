@@ -1,0 +1,20 @@
+# Arquivos e pastas do Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+
+# Configurações de ambiente virtual
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+
+# Ignorar arquivos específicos
+appcopy.py
+card_generation copy.py
+
+# Ignorar arquivos CSV na pasta Documentação
+Documentação/*.csv

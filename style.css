@@ -1,0 +1,74 @@
+.st-emotion-cache-1v0mbdj img { /* Estilo para a imagem */
+    width: 250px;  /* Define a largura da imagem */
+    border-radius: 10px; /* Arredonda os cantos da imagem */
+    margin: 0 auto;
+    display: block;
+}
+
+.st-emotion-cache-1b0udgb { /* Estilo para a legenda */
+    text-align: center; /* Centraliza a legenda */
+    font-weight: bold; /* Torna a legenda em negrito */
+    color: #020202; /* Define a cor da legenda */
+    font-size:10pt;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+}
+
+.st-emotion-cache-jkfxgf{  /*testo Carregue os arquivos*/
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    font-weight: bold;
+    color: #050404;
+}
+.st-emotion-cache-taue2i{/*Fundo do Botão de carregar arquivos*/
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    background-color: rgb(236, 233, 229);
+}
+
+.st-emotion-cache-597vll{/*Fontes Geradas após caregamento do CSV*/
+    font-size: 10pt;
+    color: rgb(2, 2, 2);
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+
+}
+
+.st-emotion-cache-12fmjuu{ /*CABEÇALHO*/
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    margin-bottom: 0px;
+    visibility: hidden;
+}
+
+
+.st-emotion-cache-vmpjyt{/*Fundo Side Bar*/
+    background-color: #E3E5ED;
+}
+
+.stMain{/*Fundo da pagina*/
+    background-color:rgb(255, 255, 255)
+}
+
+.st-emotion-cache-pgf13w h2 { /* Substitua yyy pela classe correta do h2 */
+    font-size: 25px;
+    font-weight: bold;
+    color: #070142;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+
+
+.st-emotion-cache-12fmjuu{/*Cabeçalho*/
+    background-color: #ffffff
+}
+
+.st-emotion-cache-jkfxgf p{/*Carregar arquivos*/
+    color: rgb(2, 2, 2);
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 10pt;
+    font-weight: bold;
+}
+
+.stHeading { /*stHeader da página principal*/
+    text-align: center;
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    font-size: 14pt;
+    background-color: #E3E5ED;
+    border-radius: 15px;
+    margin-top: 0px;
+}
