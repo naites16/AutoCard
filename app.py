@@ -12,115 +12,129 @@ from graphs import (
 )
 import folium
 from streamlit_folium import st_folium
-from utils import dias_da_semana
 import pandas as pd
+from utils import dias_da_semana
+from datetime import datetime, time
 
-st.set_page_config(
-    page_title="Cartão Programa Automatizado",
-    layout='wide', page_icon='img/icon.png'
-)
+# Configuração da página
+st.set_page_config(page_title="Cartão Programa Automatizado", layout='wide')
 
-st.markdown(
-    f"""
-    <style>
-    {open('style.css').read()}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# Aplicar estilo CSS
+try:
+    st.markdown(
+        f"""
+        <style>
+        {open('style.css').read()}
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+except FileNotFoundError:
+    st.warning("Arquivo style.css não encontrado. Certifique-se de que o arquivo de estilo está no diretório correto.")
+
 st.header('Sistema de Geração de Cartão Programa Automatizado')
 st.sidebar.image('img/icon.png', caption='Cartão Programa Automatizado')
 
+# Inicialização das variáveis de estado da sessão
+if 'pontos_patrulhamento' not in st.session_state:
+    st.session_state.pontos_patrulhamento = []
+if 'dados_carregados' not in st.session_state:
+    st.session_state.dados_carregados = False
+if 'crime_data' not in st.session_state:
+    st.session_state.crime_data = None
+if 'excel_path' not in st.session_state:
+    st.session_state.excel_path = None
+
+# Definição das faixas horárias
+faixas_horarias = [
+    ("00:00-05:59", time(0, 0), time(5, 59)),
+    ("06:00-11:59", time(6, 0), time(11, 59)),
+    ("12:00-17:59", time(12, 0), time(17, 59)),
+    ("18:00-23:59", time(18, 0), time(23, 59))
+]
+
+# Upload de dados
 with st.sidebar:
     uploaded_file = st.file_uploader(label="Fazer Upload dos dados criminais!", help="Clique no botão abaixo 'Browse Files'", type=["csv"])
-    if uploaded_file is not None:
+    if uploaded_file is not None and not st.session_state.dados_carregados:
         try:
-            crime_data = CrimeData(uploaded_file)
-            previsor = PrevisorCrime(crime_data)
+            st.session_state.crime_data = CrimeData(uploaded_file)
+            previsor = PrevisorCrime(st.session_state.crime_data)
             previsor.treinar_modelo()
-            cartao_programa = CartaoPrograma(previsor, crime_data)
-            cartao_programa.gerar_pontos_patrulhamento()
-            excel_path = cartao_programa.gerar_excel("cartao_programa.xlsx")
+            cartao_programa = CartaoPrograma(previsor, st.session_state.crime_data)
+            st.session_state.pontos_patrulhamento = cartao_programa.gerar_pontos_patrulhamento()
+            st.session_state.excel_path = cartao_programa.gerar_excel("cartao_programa.xlsx")
             st.success("Cartão programa gerado com sucesso!")
+            st.session_state.dados_carregados = True
 
-            st.download_button(
-                label="Baixar Cartões Programa (Excel)",
-                data=open(excel_path, "rb").read(),
-                file_name="cartões_programa.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            )
         except Exception as e:
             st.error(f"Ocorreu um erro: {e}")
+    
+    # Botão de download fora do bloco condicional anterior
+    if st.session_state.dados_carregados and st.session_state.excel_path:
+        st.download_button(
+            label="Baixar Cartões Programa (Excel)",
+            data=open(st.session_state.excel_path, "rb").read(),
+            file_name="cartões_programa.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
-st.markdown(
-    f"""
-    <style>
-    {open('style.css').read()}
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-st.write("## Gráficos de Análise:")
-
-if uploaded_file is not None:
+if st.session_state.dados_carregados and len(st.session_state.pontos_patrulhamento) > 0:
     try:
-        relatorio = crime_data.gerar_relatorio()
-
-        # Primeira linha de gráficos
+        # Gráficos de análise
+        st.write("## Gráficos de Análise:")
         col1, col2, col3 = st.columns(3)
+        col1.plotly_chart(create_hourly_crime_graph(st.session_state.crime_data.df), use_container_width=True)
+        col2.plotly_chart(create_neighborhood_crime_graph(st.session_state.crime_data.df), use_container_width=True)
+        col3.plotly_chart(create_weekday_crime_graph(st.session_state.crime_data.df), use_container_width=True)
 
-        with col1:
-            fig_horario = create_hourly_crime_graph(relatorio)
-            st.plotly_chart(fig_horario, use_container_width=True)
-
-        with col2:
-            fig_bairro = create_neighborhood_crime_graph(relatorio)
-            st.plotly_chart(fig_bairro, use_container_width=True)
-
-        with col3:
-            fig_dia_semana = create_weekday_crime_graph(relatorio)
-            st.plotly_chart(fig_dia_semana, use_container_width=True)
-
-        # Segunda linha de gráficos
         col4, col5, col6 = st.columns(3)
+        col4.plotly_chart(create_crime_type_pareto_graph(st.session_state.crime_data.df), use_container_width=True)
+        col5.plotly_chart(create_crime_trend_graph(st.session_state.crime_data.df), use_container_width=True)
+        col6.plotly_chart(create_shift_crime_graph(st.session_state.crime_data.df), use_container_width=True)
 
-        with col4:
-            fig_pareto = create_crime_type_pareto_graph(crime_data.df)
-            st.plotly_chart(fig_pareto, use_container_width=True)
-
-        with col5:
-            fig_tendencia = create_crime_trend_graph(crime_data.df)
-            st.plotly_chart(fig_tendencia, use_container_width=True)
-
-        with col6:
-            fig_pizza = create_shift_crime_graph(crime_data.df)
-            st.plotly_chart(fig_pizza, use_container_width=True)
-
+        # Seletores para dia e horário
         st.write("## Mapa de Pontos de Patrulhamento:")
+        col1, col2 = st.columns(2)
+        with col1:
+            dia_selecionado = st.selectbox(
+                "Selecione o dia da semana:",
+                options=[(i, nome) for i, nome in dias_da_semana.items()],
+                format_func=lambda x: x[1]
+            )
+        with col2:
+            faixa_horaria = st.selectbox(
+                "Selecione a faixa horária:",
+                options=[f[0] for f in faixas_horarias]
+            )
 
-        # Gerar o mapa em uma coluna de largura total
-        col_mapa = st.columns(1)[0]
-        
-        # Gerar o mapa - Centralizado na primeira coordenada
-        primeiro_ponto = cartao_programa.pontos_patrulhamento[0] if cartao_programa.pontos_patrulhamento else None
-        localizacao_mapa = [primeiro_ponto["LATITUDE"], primeiro_ponto["LONGITUDE"]] if primeiro_ponto else [-16.36506, -46.9020118]
-        m = folium.Map(location=localizacao_mapa, zoom_start=15, tiles='OpenStreetMap', control_scale=True)
+        # Encontrar os limites de horário selecionados
+        horario_inicio = next(f[1] for f in faixas_horarias if f[0] == faixa_horaria)
+        horario_fim = next(f[2] for f in faixas_horarias if f[0] == faixa_horaria)
 
-        cores = ["red", "blue", "green", "purple", "orange", "darkred", "lightgray"]
-        for dia in range(7):
-            pontos_dia = [ponto for ponto in cartao_programa.pontos_patrulhamento if ponto["DIA_SEMANA"] == dia]
-            cor = cores[dia % len(cores)]
-            for ponto in pontos_dia:
-                try:
-                    folium.Marker(
-                        location=[ponto["LATITUDE"], ponto["LONGITUDE"]],
-                        popup=f"<b>Dia:</b> {dias_da_semana[dia]}<br><b>Horário:</b> {ponto['HORARIO_INICIO'].strftime('%H:%M')} - {ponto['HORARIO_TERMINO'].strftime('%H:%M')}<br><b>Bairro:</b> {ponto['BAIRRO']}<br><b>Objetivo:</b> {ponto['OBJETIVO']}",
-                        icon=folium.Icon(color=cor)
-                    ).add_to(m)
-                except Exception as e:
-                    print(f"Erro ao adicionar marcador: {e}")
+        # Filtrar pontos por dia e horário
+        pontos_filtrados = [
+            ponto for ponto in st.session_state.pontos_patrulhamento 
+            if ponto["DIA_SEMANA"] == dia_selecionado[0] and
+            horario_inicio <= ponto["HORARIO_INICIO"].time() <= horario_fim
+        ]
 
-        with col_mapa:
-            st_folium(m, width='100%', returned_objects=[])
-    except Exception as e:
-        st.error(f"Ocorreu um erro: {e}")
+        # Criar mapa
+        if pontos_filtrados:
+            localizacao_inicial = [pontos_filtrados[0]["LATITUDE"], pontos_filtrados[0]["LONGITUDE"]]
+            mapa = folium.Map(location=localizacao_inicial, zoom_start=15, tiles='OpenStreetMap')
+
+            for ponto in pontos_filtrados:
+                folium.Marker(
+                    location=[ponto["LATITUDE"], ponto["LONGITUDE"]],
+                    popup=(f"<b>Dia:</b> {dias_da_semana[ponto['DIA_SEMANA']]}<br>"
+                           f"<b>Horário:</b> {ponto['HORARIO_INICIO'].strftime('%H:%M')} - {ponto['HORARIO_TERMINO'].strftime('%H:%M')}<br>"
+                           f"<b>Bairro:</b> {ponto['BAIRRO']}<br><b>Objetivo:</b> {ponto['OBJETIVO']}"),
+                    icon=folium.Icon(color="blue")
+                ).add_to(mapa)
+
+            st_folium(mapa, width='100%', height=700)
+        else:
+            st.warning("Não há pontos de patrulhamento para o dia e horário selecionados.")
+
+    except Exception as e: st.error(f"Ocorreu um erro ao processar os dados: {e}")
