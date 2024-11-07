@@ -1,7 +1,6 @@
 import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
-from utils import dias_da_semana  # Importa o mapeamento
 
 # Definindo as cores padrão
 CORES = {
@@ -218,19 +217,29 @@ def create_hourly_crime_graph(data):
 
 
 
-def create_weekday_crime_graph(data):
-    # Contagem de ocorrências por dia da semana
-    crimes_por_dia = data['DIA_SEMANA'].value_counts().sort_index()
+def create_weekday_crime_graph(data): # Inclua CORES como argumento
+    # Mapeia os números para os nomes dos dias da semana
+    mapeamento_dias = {
+        0: 'Segunda',
+        1: 'Terça',
+        2: 'Quarta',
+        3: 'Quinta',
+        4: 'Sexta',
+        5: 'Sábado',
+        6: 'Domingo'
+    }
+    
+    data['DIA_SEMANA'] = data['DIA_SEMANA'].map(mapeamento_dias)
+    ordem_dias = list(mapeamento_dias.values())
 
-    # Mapeia o índice numérico para o nome do dia
-    crimes_por_dia.index = crimes_por_dia.index.map(dias_da_semana)
+    crimes_por_dia = data['DIA_SEMANA'].value_counts().reindex(ordem_dias, fill_value=0)
+    print(data.head(5))
 
-    # Criação do gráfico
     fig_dia_semana = go.Figure()
     fig_dia_semana.add_trace(go.Bar(
         x=crimes_por_dia.index,
         y=crimes_por_dia.values,
-        marker_color='#32417A',  # Cor secundária
+        marker_color=CORES['secundaria'], # Use CORES aqui
         text=crimes_por_dia.values,
         textposition='outside'
     ))
@@ -243,7 +252,7 @@ def create_weekday_crime_graph(data):
             title='',
             showgrid=False,
             showline=True,
-            linecolor='#102F5D',  # Cor primária
+            linecolor=CORES['primaria'], # Use CORES aqui
             type='category'
         ),
         yaxis=dict(
@@ -252,7 +261,7 @@ def create_weekday_crime_graph(data):
             gridcolor='lightgray',
             zeroline=False
         ),
-        font=dict(color='#010101'),  # Cor do texto
-        title_font=dict(size=24, color='#102F5D')
+        font=dict(color=CORES['texto']), # Use CORES aqui
+        title_font=dict(size=24, color=CORES['primaria']) # Use CORES aqui
     )
     return fig_dia_semana
